@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D Stress State Visualizer — EN.530.215</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --blue:#4A9EFF;--blue-dim:#2563a8;--orange:#FF6B35;--green:#3DDB85;--red:#FF4757;
+  --panel-bg:rgba(10,12,20,0.82);--panel-border:rgba(255,255,255,0.07);
+  --input-bg:rgba(255,255,255,0.05);--input-border:rgba(255,255,255,0.12);
+  --text-primary:#E8ECF4;--text-secondary:#8A93A8;--text-dim:#4A5268;
+}
+html,body{width:100%;min-height:100vh;background:#020408;color:var(--text-primary);font-family:'Inter',sans-serif;overflow-x:hidden;}
+#starfield{position:fixed;inset:0;z-index:0;pointer-events:none;}
+.nebula{position:fixed;z-index:0;pointer-events:none;border-radius:50%;filter:blur(80px);opacity:0.18;}
+.n1{width:600px;height:600px;top:-150px;left:-100px;background:radial-gradient(circle,#1a3a6e,transparent);}
+.n2{width:500px;height:500px;bottom:-100px;right:-50px;background:radial-gradient(circle,#2a1a4e,transparent);}
+.n3{width:400px;height:300px;top:40%;left:40%;background:radial-gradient(circle,#0e2a1e,transparent);}
+.wrap{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;padding:18px;gap:14px;}
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:14px 22px;background:var(--panel-bg);border:1px solid var(--panel-border);border-radius:14px;backdrop-filter:blur(20px);}
+.hdr-left{display:flex;align-items:center;gap:14px;}
+.hdr-icon{width:34px;height:34px;border-radius:9px;background:linear-gradient(135deg,#1a3a6e,#0a1a3e);border:1px solid var(--blue-dim);display:flex;align-items:center;justify-content:center;}
+.hdr-title{font-family:'Space Mono',monospace;font-size:14px;font-weight:700;letter-spacing:0.06em;}
+.hdr-sub{font-size:11px;color:var(--text-secondary);letter-spacing:0.03em;margin-top:2px;}
+.badges{display:flex;gap:7px;}
+.bdg{padding:4px 10px;border-radius:20px;font-size:10px;font-family:'Space Mono',monospace;border:1px solid;}
+.bdg-blue{background:rgba(74,158,255,0.1);border-color:rgba(74,158,255,0.3);color:var(--blue);}
+.bdg-dim{background:rgba(255,255,255,0.04);border-color:var(--panel-border);color:var(--text-secondary);}
+.main{display:grid;grid-template-columns:280px 1fr 280px;gap:14px;flex:1;min-height:580px;}
+.panel{background:var(--panel-bg);border:1px solid var(--panel-border);border-radius:14px;backdrop-filter:blur(20px);padding:18px;display:flex;flex-direction:column;gap:16px;overflow-y:auto;}
+.sec-head{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.16em;text-transform:uppercase;color:var(--text-dim);padding-bottom:7px;border-bottom:1px solid var(--panel-border);}
+.ig{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.ir{display:flex;flex-direction:column;gap:4px;}
+.ir label{font-size:11px;color:var(--text-secondary);font-family:'Space Mono',monospace;}
+.ir input[type=number]{width:100%;padding:7px 9px;font-size:13px;font-family:'Space Mono',monospace;background:var(--input-bg);border:1px solid var(--input-border);border-radius:8px;color:var(--text-primary);transition:border-color 0.15s;-moz-appearance:textfield;}
+.ir input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;}
+.ir input[type=number]:focus{outline:none;border-color:var(--blue);background:rgba(74,158,255,0.06);}
+.rb{display:flex;flex-direction:column;gap:5px;}
+.rr{display:flex;justify-content:space-between;align-items:center;padding:6px 9px;background:rgba(255,255,255,0.03);border:1px solid var(--panel-border);border-radius:7px;}
+.rl{font-size:11px;color:var(--text-secondary);font-family:'Space Mono',monospace;}
+.rv{font-size:12px;font-weight:500;color:var(--text-primary);font-family:'Space Mono',monospace;}
+.fbdg{padding:8px 10px;border-radius:8px;font-size:11px;font-family:'Space Mono',monospace;text-align:center;letter-spacing:0.04em;border:1px solid;transition:all 0.2s;}
+.f-safe{background:rgba(61,219,133,0.08);border-color:rgba(61,219,133,0.25);color:var(--green);}
+.f-yield{background:rgba(255,71,87,0.1);border-color:rgba(255,71,87,0.3);color:var(--red);}
+.f-unk{background:rgba(255,255,255,0.03);border-color:var(--panel-border);color:var(--text-dim);}
+.vport{background:rgba(4,6,14,0.7);border:1px solid var(--panel-border);border-radius:14px;backdrop-filter:blur(20px);display:flex;flex-direction:column;overflow:hidden;}
+.vhdr{padding:11px 17px;border-bottom:1px solid var(--panel-border);display:flex;align-items:center;justify-content:space-between;}
+.vtitle{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-dim);}
+.vhint{font-size:10px;color:var(--text-dim);font-family:'Space Mono',monospace;}
+.vcwrap{flex:1;display:flex;align-items:center;justify-content:center;padding:10px;min-height:340px;}
+#cube3d{cursor:grab;display:block;}
+#cube3d:active{cursor:grabbing;}
+.msec{border-top:1px solid var(--panel-border);padding:12px 16px;background:rgba(4,6,14,0.5);}
+.mtitle{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim);margin-bottom:9px;}
+.mrow{display:flex;gap:8px;justify-content:center;}
+.div{height:1px;background:var(--panel-border);}
+.tensor{display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px;font-family:'Space Mono',monospace;font-size:10px;background:rgba(255,255,255,0.02);border-radius:8px;padding:9px;border:1px solid var(--panel-border);}
+.tc{text-align:center;color:var(--text-secondary);padding:2px 0;}
+.tc-d{color:var(--blue);}
+.tc-s{color:var(--orange);}
+.bot{padding:9px 22px;background:var(--panel-bg);border:1px solid var(--panel-border);border-radius:10px;backdrop-filter:blur(20px);display:flex;align-items:center;justify-content:space-between;}
+.bot-txt{font-size:10px;color:var(--text-dim);font-family:'Space Mono',monospace;}
+.leg{display:flex;gap:14px;align-items:center;}
+.li{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text-secondary);}
+.ld{width:10px;height:3px;border-radius:2px;}
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:2px;}
+</style>
+</head>
+<body>
+<canvas id="starfield"></canvas>
+<div class="nebula n1"></div>
+<div class="nebula n2"></div>
+<div class="nebula n3"></div>
+
+<div class="wrap">
+  <header class="hdr">
+    <div class="hdr-left">
+      <div class="hdr-icon">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4A9EFF" stroke-width="1.5">
+          <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+        </svg>
+      </div>
+      <div>
+        <div class="hdr-title">3D Stress State Visualizer</div>
+        <div class="hdr-sub">EN.530.215 Mechanics-Based Design &nbsp;·&nbsp; Johns Hopkins University</div>
+      </div>
+    </div>
+    <div class="badges">
+      <span class="bdg bdg-blue">Spring 2026</span>
+      <span class="bdg bdg-dim">Ken Ning</span>
+      <span class="bdg bdg-dim">Prof. El-Awady</span>
+    </div>
+  </header>
+
+  <div class="main">
+    <!-- LEFT -->
+    <div class="panel">
+      <div>
+        <div class="sec-head">Normal Stresses (MPa)</div>
+        <div style="height:9px"></div>
+        <div class="ig">
+          <div class="ir"><label>σ<sub>x</sub></label><input type="number" id="sx" value="80" step="1"></div>
+          <div class="ir"><label>σ<sub>y</sub></label><input type="number" id="sy" value="40" step="1"></div>
+          <div class="ir"><label>σ<sub>z</sub></label><input type="number" id="sz" value="20" step="1"></div>
+        </div>
+      </div>
+      <div>
+        <div class="sec-head">Shear Stresses (MPa)</div>
+        <div style="height:9px"></div>
+        <div class="ig">
+          <div class="ir"><label>τ<sub>xy</sub></label><input type="number" id="txy" value="30" step="1"></div>
+          <div class="ir"><label>τ<sub>xz</sub></label><input type="number" id="txz" value="10" step="1"></div>
+          <div class="ir"><label>τ<sub>yz</sub></label><input type="number" id="tyz" value="15" step="1"></div>
+        </div>
+      </div>
+      <div>
+        <div class="sec-head">Failure Parameters</div>
+        <div style="height:9px"></div>
+        <div class="ir"><label>Yield Strength σ<sub>Y</sub> (MPa)</label><input type="number" id="sy_yield" value="250" step="1"></div>
+      </div>
+      <div class="div"></div>
+      <div>
+        <div class="sec-head">Stress Tensor [σ]</div>
+        <div style="height:9px"></div>
+        <div class="tensor">
+          <div class="tc tc-d" id="t00">80</div><div class="tc tc-s" id="t01">30</div><div class="tc tc-s" id="t02">10</div>
+          <div class="tc tc-s" id="t10">30</div><div class="tc tc-d" id="t11">40</div><div class="tc tc-s" id="t12">15</div>
+          <div class="tc tc-s" id="t20">10</div><div class="tc tc-s" id="t21">15</div><div class="tc tc-d" id="t22">20</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CENTER -->
+    <div class="vport">
+      <div class="vhdr">
+        <div class="vtitle">3D Stress Element</div>
+        <div class="vhint">drag to rotate &nbsp;·&nbsp; scroll to zoom</div>
+      </div>
+      <div class="vcwrap">
+        <canvas id="cube3d" width="500" height="370"></canvas>
+      </div>
+      <div class="msec">
+        <div class="mtitle">Mohr's Circles — Principal Planes &nbsp; σ₁₂ &nbsp;/&nbsp; σ₁₃ &nbsp;/&nbsp; σ₂₃</div>
+        <div class="mrow">
+          <canvas id="mohr12" width="175" height="128"></canvas>
+          <canvas id="mohr13" width="175" height="128"></canvas>
+          <canvas id="mohr23" width="175" height="128"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="panel">
+      <div>
+        <div class="sec-head">Principal Stresses (MPa)</div>
+        <div style="height:9px"></div>
+        <div class="rb">
+          <div class="rr"><span class="rl">σ₁ (max)</span><span class="rv" id="s1">—</span></div>
+          <div class="rr"><span class="rl">σ₂ (mid)</span><span class="rv" id="s2">—</span></div>
+          <div class="rr"><span class="rl">σ₃ (min)</span><span class="rv" id="s3">—</span></div>
+        </div>
+      </div>
+      <div>
+        <div class="sec-head">Derived Values (MPa)</div>
+        <div style="height:9px"></div>
+        <div class="rb">
+          <div class="rr"><span class="rl">τ<sub>max</sub></span><span class="rv" id="tmax">—</span></div>
+          <div class="rr"><span class="rl">σ<sub>von Mises</sub></span><span class="rv" id="vm">—</span></div>
+          <div class="rr"><span class="rl">σ<sub>hydrostatic</sub></span><span class="rv" id="hydro">—</span></div>
+          <div class="rr"><span class="rl">I₁ (1st invariant)</span><span class="rv" id="i1">—</span></div>
+          <div class="rr"><span class="rl">τ<sub>octahedral</sub></span><span class="rv" id="soct">—</span></div>
+        </div>
+      </div>
+      <div class="div"></div>
+      <div>
+        <div class="sec-head">Failure Criteria</div>
+        <div style="height:9px"></div>
+        <div style="display:flex;flex-direction:column;gap:7px;">
+          <div id="vm-badge" class="fbdg f-unk">Von Mises — enter σ_Y</div>
+          <div id="tresca-badge" class="fbdg f-unk">Tresca — enter σ_Y</div>
+        </div>
+      </div>
+      <div>
+        <div class="sec-head">Safety Factors</div>
+        <div style="height:9px"></div>
+        <div class="rb">
+          <div class="rr"><span class="rl">SF (Von Mises)</span><span class="rv" id="sf-vm">—</span></div>
+          <div class="rr"><span class="rl">SF (Tresca)</span><span class="rv" id="sf-tresca">—</span></div>
+        </div>
+      </div>
+      <div class="div"></div>
+      <div>
+        <div class="sec-head">Legend</div>
+        <div style="height:8px"></div>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <div class="li"><div class="ld" style="background:#4A9EFF"></div><span>Normal stresses (σ)</span></div>
+          <div class="li"><div class="ld" style="background:#FF6B35"></div><span>Shear stresses (τ)</span></div>
+          <div class="li"><div class="ld" style="background:#3DDB85"></div><span>Safe — below yield</span></div>
+          <div class="li"><div class="ld" style="background:#FF4757"></div><span>Yield predicted</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="bot">
+    <div class="bot-txt">EN.530.215 Extra Credit &nbsp;·&nbsp; Stress Tensor Eigenvalue Decomposition &nbsp;·&nbsp; Von Mises &amp; Tresca Failure Criteria</div>
+    <div class="leg">
+      <div class="li"><div class="ld" style="background:#4A9EFF"></div>Normal</div>
+      <div class="li"><div class="ld" style="background:#FF6B35"></div>Shear</div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const canvas=document.getElementById('starfield');
+  const ctx=canvas.getContext('2d');
+  let stars=[];
+  function resize(){
+    canvas.width=window.innerWidth; canvas.height=window.innerHeight; stars=[];
+    for(let i=0;i<300;i++) stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*1.4+0.2,a:Math.random()*0.7+0.15,speed:Math.random()*0.003+0.001,phase:Math.random()*Math.PI*2});
+  }
+  function draw(t){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    stars.forEach(s=>{
+      const alpha=s.a*(0.6+0.4*Math.sin(t*s.speed+s.phase));
+      ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(200,215,255,${alpha})`; ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  window.addEventListener('resize',resize); resize(); requestAnimationFrame(draw);
+})();
+
+let rotX=0.4,rotY=0.6,zoom=1,dragging=false,lastX=0,lastY=0;
+const cc=document.getElementById('cube3d');
+cc.addEventListener('mousedown',e=>{dragging=true;lastX=e.clientX;lastY=e.clientY;});
+window.addEventListener('mouseup',()=>{dragging=false;});
+window.addEventListener('mousemove',e=>{
+  if(!dragging)return;
+  rotY+=(e.clientX-lastX)*0.01; rotX-=(e.clientY-lastY)*0.01;
+  rotX=Math.max(-Math.PI/2,Math.min(Math.PI/2,rotX));
+  lastX=e.clientX;lastY=e.clientY; drawCube();
+});
+cc.addEventListener('wheel',e=>{e.preventDefault();zoom*=e.deltaY>0?0.93:1.07;zoom=Math.max(0.4,Math.min(2.5,zoom));drawCube();},{passive:false});
+cc.addEventListener('touchstart',e=>{if(e.touches.length===1){dragging=true;lastX=e.touches[0].clientX;lastY=e.touches[0].clientY;}},{passive:true});
+cc.addEventListener('touchend',()=>{dragging=false;},{passive:true});
+cc.addEventListener('touchmove',e=>{
+  if(!dragging||e.touches.length!==1)return;
+  rotY+=(e.touches[0].clientX-lastX)*0.012; rotX-=(e.touches[0].clientY-lastY)*0.012;
+  rotX=Math.max(-Math.PI/2,Math.min(Math.PI/2,rotX));
+  lastX=e.touches[0].clientX;lastY=e.touches[0].clientY; drawCube();
+},{passive:true});
+
+function getS(){return{sx:parseFloat(document.getElementById('sx').value)||0,sy:parseFloat(document.getElementById('sy').value)||0,sz:parseFloat(document.getElementById('sz').value)||0,txy:parseFloat(document.getElementById('txy').value)||0,txz:parseFloat(document.getElementById('txz').value)||0,tyz:parseFloat(document.getElementById('tyz').value)||0,sy_yield:parseFloat(document.getElementById('sy_yield').value)||0};}
+
+function eig(sx,txy,txz,sy,tyz,sz){
+  const p1=txy*txy+txz*txz+tyz*tyz;
+  if(p1<1e-10)return[sx,sy,sz].sort((a,b)=>b-a);
+  const q=(sx+sy+sz)/3,p2=(sx-q)**2+(sy-q)**2+(sz-q)**2+2*p1,p=Math.sqrt(p2/6);
+  const B00=(sx-q)/p,B11=(sy-q)/p,B22=(sz-q)/p,Bb=txy/p,Bc=txz/p,Bf=tyz/p;
+  const r=(B00*(B11*B22-Bf*Bf)-Bb*(Bb*B22-Bf*Bc)+Bc*(Bb*Bf-B11*Bc))/2;
+  const phi3=r<=-1?Math.PI/3:r>=1?0:Math.acos(r)/3;
+  const ev1=q+2*p*Math.cos(phi3),ev3=q+2*p*Math.cos(phi3+2*Math.PI/3);
+  return[ev1,3*q-ev1-ev3,ev3].sort((a,b)=>b-a);
+}
+
+function compute(){
+  const s=getS();
+  const[s1,s2,s3]=eig(s.sx,s.txy,s.txz,s.sy,s.tyz,s.sz);
+  const tmax=(s1-s3)/2,vm=Math.sqrt(0.5*((s1-s2)**2+(s2-s3)**2+(s3-s1)**2));
+  return{s1,s2,s3,tmax,vm,hydro:(s.sx+s.sy+s.sz)/3,i1:s.sx+s.sy+s.sz,soct:Math.sqrt(2/3)*vm,sy_yield:s.sy_yield};
+}
+
+function fmt(v,d=1){return(v>=0?'+':'')+v.toFixed(d);}
+
+function updateResults(){
+  const s=getS();
+  document.getElementById('t00').textContent=s.sx; document.getElementById('t01').textContent=s.txy; document.getElementById('t02').textContent=s.txz;
+  document.getElementById('t10').textContent=s.txy; document.getElementById('t11').textContent=s.sy; document.getElementById('t12').textContent=s.tyz;
+  document.getElementById('t20').textContent=s.txz; document.getElementById('t21').textContent=s.tyz; document.getElementById('t22').textContent=s.sz;
+  const r=compute();
+  document.getElementById('s1').textContent=fmt(r.s1)+' MPa';
+  document.getElementById('s2').textContent=fmt(r.s2)+' MPa';
+  document.getElementById('s3').textContent=fmt(r.s3)+' MPa';
+  document.getElementById('tmax').textContent=fmt(r.tmax)+' MPa';
+  document.getElementById('vm').textContent=r.vm.toFixed(1)+' MPa';
+  document.getElementById('hydro').textContent=fmt(r.hydro)+' MPa';
+  document.getElementById('i1').textContent=fmt(r.i1)+' MPa';
+  document.getElementById('soct').textContent=r.soct.toFixed(1)+' MPa';
+  const sy=r.sy_yield;
+  const vmB=document.getElementById('vm-badge'),trB=document.getElementById('tresca-badge');
+  const sfVm=document.getElementById('sf-vm'),sfTr=document.getElementById('sf-tresca');
+  if(sy>0){
+    sfVm.textContent=(sy/r.vm).toFixed(2); sfTr.textContent=(sy/2/r.tmax).toFixed(2);
+    if(r.vm>=sy){vmB.className='fbdg f-yield';vmB.textContent='Von Mises — YIELD PREDICTED';}
+    else{vmB.className='fbdg f-safe';vmB.textContent=`Von Mises — Safe (${(r.vm/sy*100).toFixed(0)}% of σ_Y)`;}
+    if(r.tmax>=sy/2){trB.className='fbdg f-yield';trB.textContent='Tresca — YIELD PREDICTED';}
+    else{trB.className='fbdg f-safe';trB.textContent=`Tresca — Safe (${(r.tmax/(sy/2)*100).toFixed(0)}% of limit)`;}
+  } else {
+    sfVm.textContent='—'; sfTr.textContent='—';
+    vmB.className='fbdg f-unk'; vmB.textContent='Von Mises — enter σ_Y';
+    trB.className='fbdg f-unk'; trB.textContent='Tresca — enter σ_Y';
+  }
+  drawCube();
+  const r2=compute();
+  drawMohr('mohr12',r2.s1,r2.s2,'1-2');
+  drawMohr('mohr13',r2.s1,r2.s3,'1-3');
+  drawMohr('mohr23',r2.s2,r2.s3,'2-3');
+}
+
+function rv(x,y,z){
+  const cy=Math.cos(rotY),sy2=Math.sin(rotY),x2=x*cy+z*sy2,z2=-x*sy2+z*cy;
+  const cx2=Math.cos(rotX),sx2=Math.sin(rotX);
+  return[x2,y*cx2-z2*sx2,y*sx2+z2*cx2];
+}
+function ts(x,y,z,W,H){const sc=90*zoom;return[W/2+x*sc,H/2-y*sc];}
+
+function drawCube(){
+  const canvas=document.getElementById('cube3d'),ctx=canvas.getContext('2d'),W=canvas.width,H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+  const NC='#4A9EFF',SC='#FF6B35';
+  const raw=[[-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1],[-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]];
+  const rot=raw.map(([x,y,z])=>rv(x,y,z));
+  const sv=rot.map(([x,y,z])=>[...ts(x,y,z,W,H),z]);
+  const fi=[[0,1,2,3],[4,5,6,7],[0,1,5,4],[2,3,7,6],[0,3,7,4],[1,2,6,5]];
+  const fn=[[0,0,-1],[0,0,1],[0,-1,0],[0,1,0],[-1,0,0],[1,0,0]];
+  fi.map((idx,i)=>({idx,norm:fn[i],avgZ:idx.reduce((s,v)=>s+rot[v][2],0)/4}))
+    .sort((a,b)=>a.avgZ-b.avgZ)
+    .forEach(({idx,norm})=>{
+      const rn=rv(...norm),br=Math.max(0.38,Math.min(0.88,0.6+rn[2]*0.28));
+      ctx.beginPath();
+      idx.forEach((v,j)=>j===0?ctx.moveTo(sv[v][0],sv[v][1]):ctx.lineTo(sv[v][0],sv[v][1]));
+      ctx.closePath();
+      ctx.fillStyle=`rgba(12,18,40,${br})`;
+      ctx.strokeStyle='rgba(74,158,255,0.2)';
+      ctx.lineWidth=1; ctx.fill(); ctx.stroke();
+    });
+
+  const s=getS();
+  const mags=[Math.abs(s.sx),Math.abs(s.sy),Math.abs(s.sz),Math.abs(s.txy),Math.abs(s.txz),Math.abs(s.tyz)];
+  const maxM=Math.max(...mags,1),MP=72;
+
+  function fc3(idx){const pts=idx.map(v=>raw[v]);return pts.reduce((a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]],[0,0,0]).map(v=>v/pts.length);}
+
+  function arr(o3,d3,mag,col,lbl){
+    if(Math.abs(mag)<0.001)return;
+    const px=(Math.abs(mag)/maxM)*MP,sgn=mag>=0?1:-1;
+    const ro=rv(...o3),rd=rv(...d3),rl=Math.sqrt(rd[0]**2+rd[1]**2+rd[2]**2)||1;
+    const rn=rd.map(v=>v/rl);
+    const fp=ts(...ro,W,H),tp=[fp[0]+rn[0]*px*sgn,fp[1]-rn[1]*px*sgn];
+    const dx=tp[0]-fp[0],dy=tp[1]-fp[1],len=Math.sqrt(dx*dx+dy*dy);
+    if(len<4)return;
+    const ux=dx/len,uy=dy/len,hs=10;
+    ctx.beginPath(); ctx.moveTo(fp[0],fp[1]); ctx.lineTo(tp[0],tp[1]);
+    ctx.strokeStyle=col; ctx.lineWidth=2.5; ctx.shadowColor=col; ctx.shadowBlur=7; ctx.stroke(); ctx.shadowBlur=0;
+    ctx.beginPath(); ctx.moveTo(tp[0],tp[1]);
+    ctx.lineTo(tp[0]-ux*hs-uy*hs*0.5,tp[1]-uy*hs+ux*hs*0.5);
+    ctx.lineTo(tp[0]-ux*hs+uy*hs*0.5,tp[1]-uy*hs-ux*hs*0.5);
+    ctx.closePath(); ctx.fillStyle=col; ctx.shadowColor=col; ctx.shadowBlur=7; ctx.fill(); ctx.shadowBlur=0;
+    ctx.fillStyle=col; ctx.font='bold 11px Space Mono,monospace';
+    ctx.shadowColor=col; ctx.shadowBlur=5; ctx.fillText(lbl,tp[0]+5,tp[1]-4); ctx.shadowBlur=0;
+  }
+
+  const f={px:fc3([1,2,6,5]),py:fc3([2,3,7,6]),pz:fc3([4,5,6,7])};
+  arr(f.px,[1,0,0],s.sx,NC,'σx'); arr(f.py,[0,1,0],s.sy,NC,'σy'); arr(f.pz,[0,0,1],s.sz,NC,'σz');
+  arr(f.px,[0,1,0],s.txy,SC,'τxy'); arr(f.px,[0,0,1],s.txz,SC,'τxz'); arr(f.py,[0,0,1],s.tyz,SC,'τyz');
+}
+
+function drawMohr(id,sA,sB,lbl){
+  const canvas=document.getElementById(id),ctx=canvas.getContext('2d'),W=canvas.width,H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+  const cx=W/2,cy=H/2-8,center=(sA+sB)/2,radius=Math.abs(sA-sB)/2;
+  const maxR=Math.max(Math.abs(center)+radius+5,10),scale=Math.min((W/2-18)/maxR,(H/2-16)/maxR);
+  ctx.strokeStyle='rgba(255,255,255,0.07)'; ctx.lineWidth=0.5;
+  ctx.beginPath(); ctx.moveTo(8,cy); ctx.lineTo(W-8,cy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(cx,8); ctx.lineTo(cx,H-18); ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx+center*scale,cy,Math.max(radius*scale,1),0,2*Math.PI);
+  ctx.strokeStyle='#4A9EFF'; ctx.lineWidth=1.5; ctx.shadowColor='#4A9EFF'; ctx.shadowBlur=6; ctx.stroke(); ctx.shadowBlur=0;
+  ctx.fillStyle='#4A9EFF'; ctx.shadowColor='#4A9EFF'; ctx.shadowBlur=4;
+  ctx.beginPath(); ctx.arc(cx+sA*scale,cy,3.5,0,2*Math.PI); ctx.fill();
+  ctx.beginPath(); ctx.arc(cx+sB*scale,cy,3.5,0,2*Math.PI); ctx.fill();
+  ctx.shadowBlur=0;
+  ctx.fillStyle='rgba(138,147,168,0.85)'; ctx.font='9px Space Mono,monospace'; ctx.textAlign='center';
+  ctx.fillText(sA.toFixed(0),cx+sA*scale,cy+13);
+  if(Math.abs(sA-sB)>8) ctx.fillText(sB.toFixed(0),cx+sB*scale,cy-6);
+  if(radius>0.5) ctx.fillText('τ='+radius.toFixed(1),cx+center*scale,cy-Math.max(radius*scale,4)-6);
+  ctx.fillStyle='rgba(74,158,255,0.45)'; ctx.fillText('plane '+lbl,W/2,H-3);
+  ctx.textAlign='left';
+}
+
+document.querySelectorAll('input[type=number]').forEach(i=>i.addEventListener('input',updateResults));
+updateResults();
+</script>
+</body>
+</html>
