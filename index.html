@@ -373,6 +373,34 @@ function drawCube(){
   const f={px:fc3([1,2,6,5]),py:fc3([2,3,7,6]),pz:fc3([4,5,6,7])};
   arr(f.px,[1,0,0],s.sx,NC,'σx'); arr(f.py,[0,1,0],s.sy,NC,'σy'); arr(f.pz,[0,0,1],s.sz,NC,'σz');
   arr(f.px,[0,1,0],s.txy,SC,'τxy'); arr(f.px,[0,0,1],s.txz,SC,'τxz'); arr(f.py,[0,0,1],s.tyz,SC,'τyz');
+
+  const axisOrigin=[-1,-1,-1];
+  const axes=[
+    {dir:[1,0,0],color:'#FF5566',label:'X'},
+    {dir:[0,1,0],color:'#44DD88',label:'Y'},
+    {dir:[0,0,1],color:'#4A9EFF',label:'Z'},
+  ];
+  const axLen=1.15;
+  axes.forEach(({dir,color,label})=>{
+    const o=rv(...axisOrigin);
+    const tip=rv(axisOrigin[0]+dir[0]*axLen,axisOrigin[1]+dir[1]*axLen,axisOrigin[2]+dir[2]*axLen);
+    const fp=ts(...o,W,H), tp=ts(...tip,W,H);
+    const dx=tp[0]-fp[0],dy=tp[1]-fp[1],len=Math.sqrt(dx*dx+dy*dy);
+    if(len<2)return;
+    const ux=dx/len,uy=dy/len,hs=6;
+    ctx.beginPath(); ctx.moveTo(fp[0],fp[1]); ctx.lineTo(tp[0],tp[1]);
+    ctx.strokeStyle=color; ctx.lineWidth=1.8;
+    ctx.shadowColor=color; ctx.shadowBlur=5; ctx.stroke(); ctx.shadowBlur=0;
+    ctx.beginPath();
+    ctx.moveTo(tp[0],tp[1]);
+    ctx.lineTo(tp[0]-ux*hs-uy*hs*0.5,tp[1]-uy*hs+ux*hs*0.5);
+    ctx.lineTo(tp[0]-ux*hs+uy*hs*0.5,tp[1]-uy*hs-ux*hs*0.5);
+    ctx.closePath(); ctx.fillStyle=color;
+    ctx.shadowColor=color; ctx.shadowBlur=5; ctx.fill(); ctx.shadowBlur=0;
+    ctx.fillStyle=color; ctx.font='bold 12px Space Mono,monospace';
+    ctx.shadowColor=color; ctx.shadowBlur=6;
+    ctx.fillText(label,tp[0]+5,tp[1]+4); ctx.shadowBlur=0;
+  });
 }
 
 function drawMohr(id,sA,sB,lbl){
