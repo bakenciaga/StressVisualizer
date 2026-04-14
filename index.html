@@ -52,10 +52,10 @@ html,body{width:100%;min-height:100vh;background:#020408;color:var(--text-primar
 .vhdr{padding:11px 17px;border-bottom:1px solid var(--panel-border);display:flex;align-items:center;justify-content:space-between;}
 .vtitle{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-dim);}
 .vhint{font-size:10px;color:var(--text-dim);font-family:'Space Mono',monospace;}
-.vcwrap{flex:1;display:flex;align-items:center;justify-content:center;padding:10px;min-height:340px;}
+.vcwrap{flex:1;display:flex;align-items:center;justify-content:center;padding:10px;min-height:280px;}
 #cube3d{cursor:grab;display:block;}
 #cube3d:active{cursor:grabbing;}
-.msec{border-top:1px solid var(--panel-border);padding:12px 16px;background:rgba(4,6,14,0.5);}
+.msec{border-top:1px solid var(--panel-border);padding:14px 16px 18px;background:rgba(4,6,14,0.5);}
 .mtitle{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.14em;text-transform:uppercase;color:var(--text-dim);margin-bottom:9px;}
 .mrow{display:flex;gap:8px;justify-content:center;}
 .div{height:1px;background:var(--panel-border);}
@@ -150,9 +150,9 @@ html,body{width:100%;min-height:100vh;background:#020408;color:var(--text-primar
       <div class="msec">
         <div class="mtitle">Mohr's Circles — Principal Planes &nbsp; σ₁₂ &nbsp;/&nbsp; σ₁₃ &nbsp;/&nbsp; σ₂₃</div>
         <div class="mrow">
-          <canvas id="mohr12" width="175" height="128"></canvas>
-          <canvas id="mohr13" width="175" height="128"></canvas>
-          <canvas id="mohr23" width="175" height="128"></canvas>
+          <canvas id="mohr12" width="195" height="180"></canvas>
+          <canvas id="mohr13" width="195" height="180"></canvas>
+          <canvas id="mohr23" width="195" height="180"></canvas>
         </div>
       </div>
     </div>
@@ -174,9 +174,9 @@ html,body{width:100%;min-height:100vh;background:#020408;color:var(--text-primar
         <div class="rb">
           <div class="rr"><span class="rl">τ<sub>max</sub></span><span class="rv" id="tmax">—</span></div>
           <div class="rr"><span class="rl">σ<sub>von Mises</sub></span><span class="rv" id="vm">—</span></div>
-          <div class="rr"><span class="rl">σ<sub>hydrostatic</sub></span><span class="rv" id="hydro">—</span></div>
-          <div class="rr"><span class="rl">I₁ (1st invariant)</span><span class="rv" id="i1">—</span></div>
-          <div class="rr"><span class="rl">τ<sub>octahedral</sub></span><span class="rv" id="soct">—</span></div>
+          
+          
+          
         </div>
       </div>
       <div class="div"></div>
