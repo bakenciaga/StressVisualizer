@@ -433,14 +433,15 @@ function drawMohr(id,sA,sB,lbl){
   ctx.textAlign='left';
 }
 
-document.querySelectorAll('input[type=number]').forEach(i=>i.addEventListener('input',updateResults));
-updateResults();
-
-function renderLoop() {
-  drawCube();
+document.addEventListener('DOMContentLoaded', function() {
+  document.querySelectorAll('input[type=number]').forEach(i=>i.addEventListener('input',updateResults));
+  updateResults();
+  function renderLoop() {
+    drawCube();
+    requestAnimationFrame(renderLoop);
+  }
   requestAnimationFrame(renderLoop);
-}
-requestAnimationFrame(renderLoop);
+});
 </script>
 </body>
 </html>
