@@ -238,6 +238,8 @@ html,body{width:100%;min-height:100vh;background:#020408;color:var(--text-primar
     requestAnimationFrame(draw);
   }
   window.addEventListener('resize',resize); resize(); requestAnimationFrame(draw);
+window.addEventListener('resize',drawCube);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)drawCube();});
 })();
 
 let rotX=0.4,rotY=0.6,zoom=1,dragging=false,lastX=0,lastY=0;
@@ -325,7 +327,13 @@ function rv(x,y,z){
 function ts(x,y,z,W,H){const sc=90*zoom;return[W/2+x*sc,H/2-y*sc];}
 
 function drawCube(){
-  const canvas=document.getElementById('cube3d'),ctx=canvas.getContext('2d'),W=canvas.width,H=canvas.height;
+  const canvas=document.getElementById('cube3d'),ctx=canvas.getContext('2d');
+  const rect=canvas.getBoundingClientRect();
+  if(canvas.width!==Math.round(rect.width)||canvas.height!==Math.round(rect.height)){
+    canvas.width=Math.round(rect.width)||500;
+    canvas.height=Math.round(rect.height)||370;
+  }
+  const W=canvas.width,H=canvas.height;
   ctx.clearRect(0,0,W,H);
   const NC='#4A9EFF',SC='#FF6B35';
   const raw=[[-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1],[-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]];
