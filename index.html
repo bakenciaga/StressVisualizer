@@ -427,6 +427,12 @@ function drawMohr(id,sA,sB,lbl){
 
 document.querySelectorAll('input[type=number]').forEach(i=>i.addEventListener('input',updateResults));
 updateResults();
+
+function renderLoop() {
+  drawCube();
+  requestAnimationFrame(renderLoop);
+}
+requestAnimationFrame(renderLoop);
 </script>
 </body>
 </html>
