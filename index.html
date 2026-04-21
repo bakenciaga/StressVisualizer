@@ -124,7 +124,7 @@ html,body{width:100%;min-height:100vh;background:#020408;color:var(--text-primar
       <div>
         <div class="sec-head">Failure Parameters</div>
         <div style="height:9px"></div>
-        <div class="ir"><label>Yield Strength σ<sub>Y</sub> (MPa)</label><input type="number" id="sy_yield" value="250" step="1"></div>
+        <div class="ir"><label>Yield Strength σ<sub>Y</sub> (MPa) <span style="color:#FF6B35;font-size:10px;letter-spacing:0.05em;">— required for failure</span></label><input type="number" id="sy_yield" value="250" step="1"></div>
       </div>
       <div class="div"></div>
       <div>
@@ -174,9 +174,6 @@ html,body{width:100%;min-height:100vh;background:#020408;color:var(--text-primar
         <div class="rb">
           <div class="rr"><span class="rl">τ<sub>max</sub></span><span class="rv" id="tmax">—</span></div>
           <div class="rr"><span class="rl">σ<sub>von Mises</sub></span><span class="rv" id="vm">—</span></div>
-          
-          
-          
         </div>
       </div>
       <div class="div"></div>
@@ -262,7 +259,7 @@ cc.addEventListener('touchmove',e=>{
   lastX=e.touches[0].clientX;lastY=e.touches[0].clientY; drawCube();
 },{passive:true});
 
-function getS(){return{sx:parseFloat(document.getElementById('sx').value)||0,sy:parseFloat(document.getElementById('sy').value)||0,sz:parseFloat(document.getElementById('sz').value)||0,txy:parseFloat(document.getElementById('txy').value)||0,txz:parseFloat(document.getElementById('txz').value)||0,tyz:parseFloat(document.getElementById('tyz').value)||0,sy_yield:parseFloat(document.getElementById('sy_yield').value)||0};}
+function getS(){return{sx:parseFloat(document.getElementById('sx').value)||0,sy:parseFloat(document.getElementById('sy').value)||0,sz:parseFloat(document.getElementById('sz').value)||0,txy:parseFloat(document.getElementById('txy').value)||0,txz:parseFloat(document.getElementById('txz').value)||0,tyz:parseFloat(document.getElementById('tyz').value)||0,syield:parseFloat(document.getElementById('sy_yield').value)||0};}
 
 function eig(sx,txy,txz,sy,tyz,sz){
   const p1=txy*txy+txz*txz+tyz*tyz;
@@ -279,7 +276,7 @@ function compute(){
   const s=getS();
   const[s1,s2,s3]=eig(s.sx,s.txy,s.txz,s.sy,s.tyz,s.sz);
   const tmax=(s1-s3)/2,vm=Math.sqrt(0.5*((s1-s2)**2+(s2-s3)**2+(s3-s1)**2));
-  return{s1,s2,s3,tmax,vm,hydro:(s.sx+s.sy+s.sz)/3,i1:s.sx+s.sy+s.sz,soct:Math.sqrt(2/3)*vm,sy_yield:s.sy_yield};
+  return{s1,s2,s3,tmax,vm,hydro:(s.sx+s.sy+s.sz)/3,i1:s.sx+s.sy+s.sz,soct:Math.sqrt(2/3)*vm,syield:s.syield};
 }
 
 function fmt(v,d=1){return(v>=0?'+':'')+v.toFixed(d);}
@@ -295,18 +292,18 @@ function updateResults(){
   document.getElementById('s3').textContent=fmt(r.s3)+' MPa';
   document.getElementById('tmax').textContent=fmt(r.tmax)+' MPa';
   document.getElementById('vm').textContent=r.vm.toFixed(1)+' MPa';
-  document.getElementById('hydro').textContent=fmt(r.hydro)+' MPa';
-  document.getElementById('i1').textContent=fmt(r.i1)+' MPa';
-  document.getElementById('soct').textContent=r.soct.toFixed(1)+' MPa';
-  const sy=r.sy_yield;
+  const yieldStrength=r.syield;
   const vmB=document.getElementById('vm-badge'),trB=document.getElementById('tresca-badge');
   const sfVm=document.getElementById('sf-vm'),sfTr=document.getElementById('sf-tresca');
-  if(sy>0){
-    sfVm.textContent=(sy/r.vm).toFixed(2); sfTr.textContent=(sy/2/r.tmax).toFixed(2);
-    if(r.vm>=sy){vmB.className='fbdg f-yield';vmB.textContent='Von Mises — YIELD PREDICTED';}
-    else{vmB.className='fbdg f-safe';vmB.textContent=`Von Mises — Safe (${(r.vm/sy*100).toFixed(0)}% of σ_Y)`;}
-    if(r.tmax>=sy/2){trB.className='fbdg f-yield';trB.textContent='Tresca — YIELD PREDICTED';}
-    else{trB.className='fbdg f-safe';trB.textContent=`Tresca — Safe (${(r.tmax/(sy/2)*100).toFixed(0)}% of limit)`;}
+  if(yieldStrength>0){
+    const sfVmVal = r.vm > 1e-9 ? (yieldStrength/r.vm) : Infinity;
+    const sfTrVal = r.tmax > 1e-9 ? (yieldStrength/2/r.tmax) : Infinity;
+    sfVm.textContent = isFinite(sfVmVal) ? sfVmVal.toFixed(2) : '∞';
+    sfTr.textContent = isFinite(sfTrVal) ? sfTrVal.toFixed(2) : '∞';
+    if(r.vm>=yieldStrength){vmB.className='fbdg f-yield';vmB.textContent='Von Mises — YIELD PREDICTED';}
+    else{vmB.className='fbdg f-safe';vmB.textContent=`Von Mises — Safe (${(r.vm/yieldStrength*100).toFixed(0)}% of σ_Y)`;}
+    if(r.tmax>=yieldStrength/2){trB.className='fbdg f-yield';trB.textContent='Tresca — YIELD PREDICTED';}
+    else{trB.className='fbdg f-safe';trB.textContent=`Tresca — Safe (${(r.tmax/(yieldStrength/2)*100).toFixed(0)}% of limit)`;}
   } else {
     sfVm.textContent='—'; sfTr.textContent='—';
     vmB.className='fbdg f-unk'; vmB.textContent='Von Mises — enter σ_Y';
