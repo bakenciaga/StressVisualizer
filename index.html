@@ -147,14 +147,6 @@ html,body{width:100%;min-height:100vh;background:#020408;color:var(--text-primar
       <div class="vcwrap">
         <canvas id="cube3d" width="500" height="370"></canvas>
       </div>
-      <div class="msec">
-        <div class="mtitle">Mohr's Circles — Principal Planes &nbsp; σ₁₂ &nbsp;/&nbsp; σ₁₃ &nbsp;/&nbsp; σ₂₃</div>
-        <div class="mrow">
-          <canvas id="mohr12" width="195" height="180"></canvas>
-          <canvas id="mohr13" width="195" height="180"></canvas>
-          <canvas id="mohr23" width="195" height="180"></canvas>
-        </div>
-      </div>
     </div>
 
     <!-- RIGHT -->
@@ -310,10 +302,6 @@ function updateResults(){
     trB.className='fbdg f-unk'; trB.textContent='Tresca — enter σ_Y';
   }
   drawCube();
-  const r2=compute();
-  drawMohr('mohr12',r2.s1,r2.s2,'1-2');
-  drawMohr('mohr13',r2.s1,r2.s3,'1-3');
-  drawMohr('mohr23',r2.s2,r2.s3,'2-3');
 }
 
 function rv(x,y,z){
@@ -404,28 +392,6 @@ function drawCube(){
     ctx.shadowColor=color; ctx.shadowBlur=6;
     ctx.fillText(label,tp[0]+5,tp[1]+4); ctx.shadowBlur=0;
   });
-}
-
-function drawMohr(id,sA,sB,lbl){
-  const canvas=document.getElementById(id),ctx=canvas.getContext('2d'),W=canvas.width,H=canvas.height;
-  ctx.clearRect(0,0,W,H);
-  const cx=W/2,cy=H/2-8,center=(sA+sB)/2,radius=Math.abs(sA-sB)/2;
-  const maxR=Math.max(Math.abs(center)+radius+5,10),scale=Math.min((W/2-18)/maxR,(H/2-16)/maxR);
-  ctx.strokeStyle='rgba(255,255,255,0.07)'; ctx.lineWidth=0.5;
-  ctx.beginPath(); ctx.moveTo(8,cy); ctx.lineTo(W-8,cy); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(cx,8); ctx.lineTo(cx,H-18); ctx.stroke();
-  ctx.beginPath(); ctx.arc(cx+center*scale,cy,Math.max(radius*scale,1),0,2*Math.PI);
-  ctx.strokeStyle='#4A9EFF'; ctx.lineWidth=1.5; ctx.shadowColor='#4A9EFF'; ctx.shadowBlur=6; ctx.stroke(); ctx.shadowBlur=0;
-  ctx.fillStyle='#4A9EFF'; ctx.shadowColor='#4A9EFF'; ctx.shadowBlur=4;
-  ctx.beginPath(); ctx.arc(cx+sA*scale,cy,3.5,0,2*Math.PI); ctx.fill();
-  ctx.beginPath(); ctx.arc(cx+sB*scale,cy,3.5,0,2*Math.PI); ctx.fill();
-  ctx.shadowBlur=0;
-  ctx.fillStyle='rgba(138,147,168,0.85)'; ctx.font='9px Space Mono,monospace'; ctx.textAlign='center';
-  ctx.fillText(sA.toFixed(0),cx+sA*scale,cy+13);
-  if(Math.abs(sA-sB)>8) ctx.fillText(sB.toFixed(0),cx+sB*scale,cy-6);
-  if(radius>0.5) ctx.fillText('τ='+radius.toFixed(1),cx+center*scale,cy-Math.max(radius*scale,4)-6);
-  ctx.fillStyle='rgba(74,158,255,0.45)'; ctx.fillText('plane '+lbl,W/2,H-3);
-  ctx.textAlign='left';
 }
 
 function resizeCanvas() {
